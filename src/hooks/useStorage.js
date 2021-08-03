@@ -1,6 +1,6 @@
 import { useState,useEffect } from "react";
 
-import { projectStorage,projectFirestore } from "../firebase/config";
+import { projectStorage,projectFireStorage,timeStamp } from "../firebase/config";
 
 const useStorage = (file)=>{
     const [progress,setProgress]=useState(null);
@@ -10,6 +10,8 @@ const useStorage = (file)=>{
 
     useEffect(()=>{
         const storageRef = projectStorage.ref(file.name);
+        const collectionRef = projectFireStorage.collection('image');
+
         storageRef.put(file).on('state_changed',(snap)=>{
             let percentage = (snap.bytesTransferred)/snap.totalBytes * 100;
             setProgress(percentage);
@@ -17,6 +19,8 @@ const useStorage = (file)=>{
             setError(err);
         },async ()=>{
             const url= await storageRef.getDownloadURL();
+            const createdAt = timeStamp();
+            collectionRef.add({url,createdAt});
             setUrl(url);
         }); 
     },[file]);
